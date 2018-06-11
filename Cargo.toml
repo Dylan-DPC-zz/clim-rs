@@ -1,0 +1,8 @@
+[package]
+name = "clim"
+version = "0.1.0"
+authors = ["dylan_DPC <dylan.dpc@gmail.com>"]
+
+[dependencies]
+console = "0.6"
+failure = "0.1"
