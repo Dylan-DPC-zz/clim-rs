@@ -1,10 +1,12 @@
 extern crate console;
 extern crate failure;
+pub mod inputs;
 
 use std::fmt::Display;
 use std::convert::Into;
 use failure::Error;
 use console::Term;
+use inputs::{ Input, LineInput};
 
 pub struct Clim<'a, T>
 where T: Display + 'a
@@ -27,6 +29,10 @@ impl<'a, T> Clim<'a, T>
                 .for_each(|menu_option: &'a Box<MenuOption<'a, T>> | {
                     term.write_line(&format!("{} {}", menu_option.key, menu_option.description));
                 });
+            let mut line = LineInput::new(term);
+            line.get_from_terminal();
+
+            println!("{}", &line.input);
 
             break;
         }
