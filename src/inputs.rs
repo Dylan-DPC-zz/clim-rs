@@ -3,14 +3,16 @@ use std::io::Error;
 
 pub struct LineInput {
     pub input: String,
-    terminal: Term
+    terminal: Term,
 }
 
 impl LineInput {
     pub fn new(term: Term) -> LineInput {
-        LineInput { input: String::from(""), terminal: term}
+        LineInput {
+            input: String::from(""),
+            terminal: term,
+        }
     }
-
 }
 
 pub trait Input {

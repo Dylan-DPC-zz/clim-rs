@@ -2,56 +2,69 @@ extern crate console;
 extern crate failure;
 pub mod inputs;
 
-use std::fmt::Display;
-use std::convert::Into;
-use failure::Error;
 use console::Term;
-use inputs::{ Input, LineInput};
+use failure::Error;
+use inputs::{Input, LineInput};
+use std::convert::Into;
+use std::fmt::Display;
 
-pub struct Clim<'a, T>
-where T: Display + 'a
+pub struct Clim<T>
+where
+    T: Display + Eq,
 {
-    menu_options: Vec<Box<MenuOption<'a, T>>>,
+    menu_options: Vec<MenuOption<T>>,
 }
 
-impl<'a, T> Clim<'a, T>
-    where T: Display + 'a
+impl<T> Clim<T>
+where
+    T: Display + Eq,
 {
-    fn new(menu_options: Vec<Box<MenuOption<'a, T>>>, ) -> Clim<T> {
-        Clim { menu_options }
+    pub fn new<U: Into<Vec<MenuOption<T>>>>(menu_options: U) -> Clim<T> {
+        Clim {
+            menu_options: menu_options.into(),
+        }
     }
 
-    fn init(&'a self) -> Result<(), Error> {
+    pub fn init(&self) -> Result<(), Error> {
         let term = Term::stderr();
 
         loop {
-            self.menu_options.iter()
-                .for_each(|menu_option: &'a Box<MenuOption<'a, T>> | {
-                    term.write_line(&format!("{} {}", menu_option.key, menu_option.description));
-                });
-            let mut line = LineInput::new(term);
-            line.get_from_terminal();
 
-            println!("{}", &line.input);
-
-            break;
+            for item in self.menu_options {
+                let result = term.write_line(&format!("{} {}", menu_option.key, menu_option.description))?;
+                let mut line = LineInput::new(term);
+                line.get_from_terminal()?;
+                break;
+            }
         }
 
         Ok(())
     }
 }
 
-pub struct MenuOption<'a, T>
-where T: Display + 'a
+pub struct MenuOption<T>
+where
+    T: Display + Eq,
 {
     key: T,
     description: String,
     on_select: Box<Fn()>,
-    sub_menu: Option<&'a Clim<'a, T>>,
-    is_exit: bool
+    is_exit: bool,
 }
 
-
+impl<T> MenuOption<T>
+where
+    T: Display + Eq,
+{
+    fn new(key: T, description: String, on_select: Box<Fn()>, is_exit: bool) -> MenuOption<T> {
+        MenuOption {
+            key,
+            description,
+            on_select,
+            is_exit,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -59,42 +72,32 @@ mod tests {
 
     #[test]
     fn new_menu_option() {
-        let menu_option = MenuOption{ key: "1", description: "foo bar baz".to_string(),
+        let menu_option = MenuOption {
+            key: "1".to_string(),
+            description: "foo bar baz".to_string(),
             on_select: Box::new(|| {
                 println!("yeeee");
-        }),
-            sub_menu: None,
-            is_exit: false
+            }),
+            is_exit: false,
         };
 
-        let clim = Clim::new(vec![Box::new(menu_option)]);
+        let clim = Clim::new(vec![(menu_option)]);
 
         (clim.menu_options.get(0).unwrap().on_select)();
     }
 
     #[test]
     fn clim_init() {
-        let menu_option: Vec<Box<MenuOption<String>>> = vec!(Box::new(MenuOption{
+        let menu_option = vec![MenuOption {
             key: "1".to_string(),
             description: "foo bar baz".to_string(),
             on_select: Box::new(|| {
                 println!("yeeee");
             }),
-            sub_menu: None,
-            is_exit: false
-        }),
-            Box::new(MenuOption {
-                key: "2".to_string(),
-                description: "second option".to_string(),
-                on_select: Box::new(|| {
-                    println!("bar");
-                }),
-                sub_menu: None,
-                is_exit: false
-            }
-            ));
+            is_exit: false,
+        }];
 
-                let clim = Clim::new(menu_option).init();
+        let clim = Clim::new(menu_option).init();
 
         println!("{:?}", clim.unwrap());
     }
