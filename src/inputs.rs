@@ -1,16 +1,16 @@
 use console::Term;
 use std::io::Error;
 
-pub struct LineInput {
+pub struct LineInput<'a> {
     pub input: String,
-    terminal: Term,
+    terminal: &'a Term,
 }
 
-impl LineInput {
-    pub fn new(term: Term) -> LineInput {
+impl<'a> LineInput<'a> {
+    pub fn new(term: &'a Term) -> LineInput<'a> {
         LineInput {
-            input: String::from(""),
-            terminal: term,
+            input: String::default(),
+            terminal: &term,
         }
     }
 }
@@ -19,7 +19,7 @@ pub trait Input {
     fn get_from_terminal(&mut self) -> Result<(), Error>;
 }
 
-impl Input for LineInput {
+impl<'a> Input for LineInput<'a> {
     fn get_from_terminal(&mut self) -> Result<(), Error> {
         self.input = self.terminal.read_line()?;
         Ok(())

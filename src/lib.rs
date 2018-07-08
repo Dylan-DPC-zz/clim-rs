@@ -8,16 +8,17 @@ use inputs::{Input, LineInput};
 use std::convert::Into;
 use std::fmt::Display;
 
+
 pub struct Clim<T>
 where
-    T: Display + Eq,
+    T: Display + Eq + Into<String> + Clone,
 {
     menu_options: Vec<MenuOption<T>>,
 }
 
 impl<T> Clim<T>
 where
-    T: Display + Eq,
+    T: Display + Eq + Into<String> + Clone,
 {
     pub fn new<U: Into<Vec<MenuOption<T>>>>(menu_options: U) -> Clim<T> {
         Clim {
@@ -25,17 +26,24 @@ where
         }
     }
 
-    pub fn init(&self) -> Result<(), Error> {
+    pub fn init(self) -> Result<(), Error> {
         let term = Term::stderr();
 
         loop {
 
-            for item in self.menu_options {
+            for menu_option in &self.menu_options {
                 let result = term.write_line(&format!("{} {}", menu_option.key, menu_option.description))?;
-                let mut line = LineInput::new(term);
-                line.get_from_terminal()?;
-                break;
             }
+
+            let mut line = LineInput::new(&term);
+            line.get_from_terminal()?;
+
+                match &self.menu_options.iter().find(| &input| input.key.clone().into() == line.input) {
+                    Some(input) => (input.on_select)(),
+                    None => continue
+                };
+
+                break;
         }
 
         Ok(())
@@ -44,7 +52,7 @@ where
 
 pub struct MenuOption<T>
 where
-    T: Display + Eq,
+    T: Display + Eq + Into<String> + Clone,
 {
     key: T,
     description: String,
@@ -54,7 +62,7 @@ where
 
 impl<T> MenuOption<T>
 where
-    T: Display + Eq,
+    T: Display + Eq + Into<String> + Clone,
 {
     fn new(key: T, description: String, on_select: Box<Fn()>, is_exit: bool) -> MenuOption<T> {
         MenuOption {
@@ -99,6 +107,5 @@ mod tests {
 
         let clim = Clim::new(menu_option).init();
 
-        println!("{:?}", clim.unwrap());
     }
 }
