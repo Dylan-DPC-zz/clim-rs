@@ -14,20 +14,23 @@ where
     T: Display + Eq + Into<String> + Clone,
 {
     menu_options: Vec<MenuOption<T>>,
+    title: String,
 }
 
 impl<T> Clim<T>
 where
     T: Display + Eq + Into<String> + Clone,
 {
-    pub fn new<U: Into<Vec<MenuOption<T>>>>(menu_options: U) -> Clim<T> {
+    pub fn new<U: Into<Vec<MenuOption<T>>>>(menu_options: U, title: String) -> Clim<T> {
         Clim {
             menu_options: menu_options.into(),
+            title
         }
     }
 
     pub fn init(self) -> Result<(), Error> {
         let term = Term::stderr();
+        term.write_line(&format!("{}", &self.title));
 
         loop {
 
@@ -89,7 +92,7 @@ mod tests {
             is_exit: false,
         };
 
-        let clim = Clim::new(vec![(menu_option)]);
+        let clim = Clim::new(vec![(menu_option)], "Welcome To Clim".to_owned());
 
         (clim.menu_options.get(0).unwrap().on_select)();
     }
@@ -105,7 +108,7 @@ mod tests {
             is_exit: false,
         }];
 
-        let clim = Clim::new(menu_option).init();
+        let clim = Clim::new(menu_option, "Welcome To Clim".to_owned()).init();
 
     }
 }
