@@ -42,11 +42,16 @@ where
             line.get_from_terminal()?;
 
                 match &self.menu_options.iter().find(| &input| input.key.clone().into() == line.input) {
-                    Some(input) => (input.on_select)(),
+                    Some(input) => {
+                        (input.on_select)();
+
+                        if input.is_exit {
+                            break;
+                        }
+                    },
                     None => continue
                 };
 
-                break;
         }
 
         Ok(())
@@ -106,6 +111,13 @@ mod tests {
                 println!("yeeee");
             }),
             is_exit: false,
+        }, MenuOption {
+            key: "2".to_string(),
+            description: "exit".to_string(),
+            on_select: Box::new(|| {
+                println!("exiting now");
+            }),
+            is_exit: true
         }];
 
         let clim = Clim::new(menu_option, "Welcome To Clim".to_owned()).init();
