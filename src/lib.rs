@@ -1,13 +1,13 @@
 extern crate console;
 extern crate failure;
 pub mod inputs;
+pub mod builder;
 
 use console::Term;
 use failure::Error;
 use inputs::{Input, LineInput};
 use std::convert::Into;
 use std::fmt::Display;
-
 
 pub struct Clim<T>
 where
