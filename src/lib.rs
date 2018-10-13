@@ -1,14 +1,16 @@
 extern crate console;
 extern crate failure;
-pub mod inputs;
 pub mod builder;
+pub mod inputs;
 
 use console::Term;
 use failure::Error;
 use inputs::{Input, LineInput};
 use std::convert::Into;
 use std::fmt::Display;
+use std::rc::Rc;
 
+#[derive(Clone)]
 pub struct Clim<T>
 where
     T: Display + Eq + Into<String> + Clone,
@@ -24,47 +26,50 @@ where
     pub fn new<U: Into<Vec<MenuOption<T>>>>(menu_options: U, title: String) -> Clim<T> {
         Clim {
             menu_options: menu_options.into(),
-            title
+            title,
         }
     }
 
     pub fn init(self) -> Result<(), Error> {
         let term = Term::stderr();
-        term.write_line(&format!("{}", &self.title));
+        term.write_line(&format!("{}", &self.title))?;
 
         loop {
-
             for menu_option in &self.menu_options {
-                let result = term.write_line(&format!("{} {}", menu_option.key, menu_option.description))?;
+                term.write_line(&format!("{} {}", menu_option.key, menu_option.description))?;
             }
 
             let mut line = LineInput::new(&term);
             line.get_from_terminal()?;
 
-                match &self.menu_options.iter().find(| &input| input.key.clone().into() == line.input) {
-                    Some(input) => {
-                        (input.on_select)();
+            match &self
+                .menu_options
+                .iter()
+                .find(|&input| input.key.clone().into() == line.input)
+            {
+                Some(input) => {
+                    (input.on_select)();
 
-                        if input.is_exit {
-                            break;
-                        }
-                    },
-                    None => continue
-                };
-
+                    if input.is_exit {
+                        break;
+                    }
+                }
+                None => continue,
+            };
         }
 
         Ok(())
     }
 }
 
+#[derive(Clone)]
 pub struct MenuOption<T>
 where
     T: Display + Eq + Into<String> + Clone,
 {
     key: T,
     description: String,
-    on_select: Box<Fn()>,
+    on_select: Rc<Fn()>,
     is_exit: bool,
 }
 
@@ -72,11 +77,16 @@ impl<T> MenuOption<T>
 where
     T: Display + Eq + Into<String> + Clone,
 {
-    fn new(key: T, description: String, on_select: Box<Fn()>, is_exit: bool) -> MenuOption<T> {
+    fn new<U: Into<T>>(
+        key: U,
+        description: &str,
+        on_select: Rc<Fn()>,
+        is_exit: bool,
+    ) -> MenuOption<T> {
         MenuOption {
-            key,
-            description,
-            on_select,
+            key: key.into(),
+            description: description.to_owned(),
+            on_select: on_select.clone(),
             is_exit,
         }
     }
@@ -91,7 +101,7 @@ mod tests {
         let menu_option = MenuOption {
             key: "1".to_string(),
             description: "foo bar baz".to_string(),
-            on_select: Box::new(|| {
+            on_select: Rc::new(|| {
                 println!("yeeee");
             }),
             is_exit: false,
@@ -104,23 +114,25 @@ mod tests {
 
     #[test]
     fn clim_init() {
-        let menu_option = vec![MenuOption {
-            key: "1".to_string(),
-            description: "foo bar baz".to_string(),
-            on_select: Box::new(|| {
-                println!("yeeee");
-            }),
-            is_exit: false,
-        }, MenuOption {
-            key: "2".to_string(),
-            description: "exit".to_string(),
-            on_select: Box::new(|| {
-                println!("exiting now");
-            }),
-            is_exit: true
-        }];
+        let menu_option = vec![
+            MenuOption {
+                key: "1".to_string(),
+                description: "foo bar baz".to_string(),
+                on_select: Rc::new(|| {
+                    println!("yeeee");
+                }),
+                is_exit: false,
+            },
+            MenuOption {
+                key: "2".to_string(),
+                description: "exit".to_string(),
+                on_select: Rc::new(|| {
+                    println!("exiting now");
+                }),
+                is_exit: true,
+            },
+        ];
 
-        let clim = Clim::new(menu_option, "Welcome To Clim".to_owned()).init();
-
+        let _ = Clim::new(menu_option, "Welcome To Clim".to_owned()).init();
     }
 }
