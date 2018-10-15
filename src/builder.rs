@@ -97,6 +97,7 @@ mod tests {
 
     #[test]
     fn builder_add() {
+        let mut builder = Builder::new("builder test");
         builder
             .add(
                 OptionBuilder::new()
