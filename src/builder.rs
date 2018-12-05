@@ -1,11 +1,11 @@
 use super::{Clim, MenuOption};
-use std::fmt::Display;
+use std::fmt::{Display, Debug};
 use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Builder<T>
 where
-    T: Display + Eq + Into<String> + Clone,
+    T: Display + Eq + Into<String> + Clone + Debug,
 {
     pub options: Vec<MenuOption<T>>,
     pub title: String,
@@ -13,7 +13,7 @@ where
 
 impl<T> Builder<T>
 where
-    T: Display + Eq + Into<String> + Clone,
+    T: Display + Eq + Into<String> + Clone + Debug,
 {
     pub fn new(title: &str) -> Builder<T> {
         Builder {
@@ -36,7 +36,7 @@ where
 #[derive(Clone)]
 pub struct OptionBuilder<T>
 where
-    T: Display + Eq + Into<String> + Clone + Default,
+    T: Display + Eq + Into<String> + Clone + Default + Debug,
 {
     key: T,
     description: String,
@@ -46,7 +46,7 @@ where
 
 impl<T> OptionBuilder<T>
 where
-    T: Display + Eq + Into<String> + Clone + Default,
+    T: Display + Eq + Into<String> + Clone + Default + Debug,
 {
     pub fn new() -> OptionBuilder<T> {
         OptionBuilder {
@@ -97,7 +97,7 @@ mod tests {
 
     #[test]
     fn builder_add() {
-        let mut builder = Builder::new("builder test");
+        let mut builder: Builder<String> = Builder::new("builder test");
         builder
             .add(
                 OptionBuilder::new()

@@ -7,16 +7,16 @@ use console::Term;
 use failure::Error;
 use inputs::{Input, LineInput};
 use std::convert::Into;
-use std::fmt::Display;
+use std::fmt::{Display, Debug, Formatter, Result as FmtResult};
 use std::rc::Rc;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Clim<T>
 where
-    T: Display + Eq + Into<String> + Clone,
+    T: Display + Eq + Into<String> + Clone + Debug,
 {
     menu_options: Vec<MenuOption<T>>,
-    title: String,
+    pub title: String,
 }
 
 impl<T> Clim<T>
@@ -89,6 +89,14 @@ where
             on_select: on_select.clone(),
             is_exit,
         }
+    }
+}
+
+impl<T> Debug for MenuOption<T>
+where T: Into<String> + Display + Clone + Eq + Debug
+{
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, " Menu Option {{ key: {}, description: {}, is_exit: {} }}", self.key, self.description, self.is_exit)
     }
 }
 
